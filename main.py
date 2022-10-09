@@ -8,8 +8,7 @@ def __IND(x, y, z, N):
 def set_obj():
     obj = [0 for i in range(6**3)]
 
-    obj[__IND(2, 2, 2, 6)] = 1
-    obj[__IND(2, 3, 2, 6)] = 1
+
     obj[__IND(2, 2, 3, 6)] = 1
     obj[__IND(2, 3, 3, 6)] = 1
 
@@ -38,6 +37,11 @@ if __name__ == "__main__":
         u = fluid.data["Vx"]
         v = fluid.data["Vy"]
         w = fluid.data["Vz"]
+
+        f = fluid.forces_Newton()
+        force = Arrow3D((2, 2 + f[0]), (2, 2 + f[1]), (2, 2 + f[2]), mutation_scale=20, lw=1, arrowstyle="-|>", color="k")
+        print(f)
+        
         for k in range(6):
             for i in range(6):
                 for j in range(6):

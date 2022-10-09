@@ -58,47 +58,56 @@ class Fluid:
                 self.data[x][self.__IND(i, j, 0)] = self.data[x][self.__IND(i, j, 1)]
                 self.data[x][self.__IND(i, j, self.N - 1)] = self.data[x][self.__IND(i, j, self.N - 2)]
 
+        if b == 0:
+            for k in range(1, self.N - 1):
+                for i in range(1, self.N - 1):
+                    for j in range(1, self.N - 1):
+                        if self.data["obj"][self.__IND(i, j, k)]:
+                            v = (self.data[x][self.__IND(i, j - 1, k)] if not self.data["obj"][self.__IND(i, j - 1, k)] else 0) + (self.data[x][self.__IND(i, j + 1, k)] if not self.data["obj"][self.__IND(i, j + 1, k)] else 0)\
+                                + (self.data[x][self.__IND(i + 1, j, k)] if not self.data["obj"][self.__IND(i + 1, j, k)] else 0) + (self.data[x][self.__IND(i - 1, j, k)] if not self.data["obj"][self.__IND(i - 1, j, k)] else 0)\
+                                + (self.data[x][self.__IND(i, j, k + 1)] if not self.data["obj"][self.__IND(i, j, k + 1)] else 0) + (self.data[x][self.__IND(i, j, k - 1)] if not self.data["obj"][self.__IND(i, j, k - 1)] else 0)
+                            c = (not self.data["obj"][self.__IND(i, j - 1, k)]) + (not self.data["obj"][self.__IND(i, j + 1, k)]) + (not self.data["obj"][self.__IND(i - 1, j, k)])\
+                                + (not self.data["obj"][self.__IND(i + 1, j, k)]) + (not self.data["obj"][self.__IND(i, j, k + 1)]) + (not self.data["obj"][self.__IND(i, j, k - 1)])
+                            self.data[x][self.__IND(i, j, k)] = v / c if c != 0 else 0
+        else:
+            for k in range(1, self.N - 1):
+                for i in range(1, self.N - 1):
+                    for j in range(1, self.N - 1):
+                        if self.data["obj"][self.__IND(i, j, k)]:
+                            self.data[x][self.__IND(i, j, k)] = 0
 
-        for k in range(1, self.N - 1):
+            for k in range(1, self.N - 1):
+                for i in range(1, self.N - 1):
+                    for j in range(1, self.N - 1):
+                        if self.data["obj"][self.__IND(i, j, k)] and b == 2:
+                            self.data[x][self.__IND(i, j, k)] += -self.data["Vy"][self.__IND(i, j - 1, k)] if self.data["Vy"][self.__IND(i, j - 1, k)] > 0 else 0
+                            break
+                    for j in range(self.N - 2, 0, -1):
+                        if self.data["obj"][self.__IND(i, j, k)] and b == 2:
+                            self.data[x][self.__IND(i, j, k)] += -self.data["Vy"][self.__IND(i, j + 1, k)] if self.data["Vy"][self.__IND(i, j + 1, k)] < 0 else 0
+                            break
+            
+            for k in range(1, self.N - 1):
+                for j in range(1, self.N - 1):
+                    for i in range(1, self.N - 1):
+                        if self.data["obj"][self.__IND(i, j, k)] and b == 1:
+                            self.data[x][self.__IND(i, j, k)] += -self.data["Vx"][self.__IND(i, j - 1, k)] if self.data["Vx"][self.__IND(i, j - 1, k)] > 0 else 0
+                            break
+                    for i in range(self.N - 2, 0, -1):
+                        if self.data["obj"][self.__IND(i, j, k)] and b == 1:
+                            self.data[x][self.__IND(i, j, k)] += -self.data["Vx"][self.__IND(i, j + 1, k)] if self.data["Vx"][self.__IND(i, j + 1, k)] < 0 else 0
+                            break
+            
             for i in range(1, self.N - 1):
                 for j in range(1, self.N - 1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        v = self.data[x][self.__IND(i, j - 1, k)] + self.data[x][self.__IND(i, j + 1, k)]
-                        if not self.data["obj"][self.__IND(i, j - 1, k)] and not self.data["obj"][self.__IND(i, j - 1, k)]: v /= 2
-                        self.data[x][self.__IND(i, j, k)] = -v if b == 2 else v
-                        break
-                for j in range(self.N - 2, 0, -1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        v = (self.data[x][self.__IND(i, j - 1, k)] if not self.data["obj"][self.__IND(i, j - 1, k)] else 0) + (self.data[x][self.__IND(i, j + 1, k)] if not self.data["obj"][self.__IND(i, j + 1, k)] else 0)
-                        self.data[x][self.__IND(i, j, k)] = -v if b == 2 else v
-                        break
-        
-        for k in range(1, self.N - 1):
-            for j in range(1, self.N - 1):
-                for i in range(1, self.N - 1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        v = (self.data[x][self.__IND(i - 1, j, k)] if not self.data["obj"][self.__IND(i - 1, j, k)] else 0) + (self.data[x][self.__IND(i + 1, j, k)] if not self.data["obj"][self.__IND(i + 1, j, k)] else 0)
-                        self.data[x][self.__IND(i, j, k)] = -v if b == 1 else v
-                        print(i, j, k, self.data[x][self.__IND(i, j, k)])
-                        break
-                for i in range(self.N - 2, 0, -1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        v = (self.data[x][self.__IND(i - 1, j, k)] if not self.data["obj"][self.__IND(i - 1, j, k)] else 0) + (self.data[x][self.__IND(i + 1, j, k)] if not self.data["obj"][self.__IND(i + 1, j, k)] else 0)
-                        self.data[x][self.__IND(i, j, k)] = -v if b == 1 else v
-                        break
-        
-        for i in range(1, self.N - 1):
-            for j in range(1, self.N - 1):
-                for k in range(1, self.N - 1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        v = (self.data[x][self.__IND(i, j, k - 1)] if not self.data["obj"][self.__IND(i, j, k - 1)] else 0) + (self.data[x][self.__IND(i, j, k + 1)] if not self.data["obj"][self.__IND(i, j, k + 1)] else 0)
-                        self.data[x][self.__IND(i, j, k)] = -v if b == 3 else v
-                        break
-                for k in range(self.N - 2, 0, -1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        v = (self.data[x][self.__IND(i, j, k - 1)] if not self.data["obj"][self.__IND(i, j, k - 1)] else 0) + (self.data[x][self.__IND(i, j, k + 1)] if not self.data["obj"][self.__IND(i, j, k + 1)] else 0)
-                        self.data[x][self.__IND(i, j, k)] = -v if b == 3 else v
-                        break
+                    for k in range(1, self.N - 1):
+                        if self.data["obj"][self.__IND(i, j, k)] and b == 3:
+                            self.data[x][self.__IND(i, j, k)] += -self.data["Vz"][self.__IND(i, j - 1, k)] if self.data["Vz"][self.__IND(i, j - 1, k)] > 0 else 0
+                            break
+                    for k in range(self.N - 2, 0, -1):
+                        if self.data["obj"][self.__IND(i, j, k)] and b == 3:
+                            self.data[x][self.__IND(i, j, k)] += -self.data["Vz"][self.__IND(i, j + 1, k)] if self.data["Vz"][self.__IND(i, j + 1, k)] < 0 else 0
+                            break
 
     def linear_solver(self, b, a, c, x, x0):
         c = 1 / c
@@ -190,6 +199,45 @@ class Fluid:
 
         self.diffuse(0, "s", "density")
         self.advect(0, "density", "s", "Vx", "Vy", "Vz")
+    
+    def forces_Newton(self):
+        f_x, f_y, f_z = 0, 0, 0
+        m = 0.0013
+
+        for k in range(1, self.N - 1):
+            for i in range(1, self.N - 1):
+                for j in range(1, self.N - 1):
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        f_y += (self.data["Vy"][self.__IND(i, j - 1, k)] if self.data["Vy"][self.__IND(i, j - 1, k)] > 0 else 0 * m) / self.dt
+                        break
+                for j in range(self.N - 2, 0, -1):
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        f_y += (self.data["Vy"][self.__IND(i, j + 1, k)] if self.data["Vy"][self.__IND(i, j + 1, k)] < 0 else 0 * m) / self.dt
+                        break
+        
+        for k in range(1, self.N - 1):
+            for j in range(1, self.N - 1):
+                for i in range(1, self.N - 1):
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        f_x += (self.data["Vx"][self.__IND(i, j - 1, k)] if self.data["Vx"][self.__IND(i, j - 1, k)] > 0 else 0 * m) / self.dt
+                        break
+                for i in range(self.N - 2, 0, -1):
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        f_x += (self.data["Vx"][self.__IND(i, j + 1, k)] if self.data["Vx"][self.__IND(i, j + 1, k)] < 0 else 0 * m) / self.dt
+                        break
+        
+        for i in range(1, self.N - 1):
+            for j in range(1, self.N - 1):
+                for k in range(1, self.N - 1):
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        f_z += (self.data["Vz"][self.__IND(i, j - 1, k)] if self.data["Vz"][self.__IND(i, j - 1, k)] > 0 else 0 * m) / self.dt
+                        break
+                for k in range(self.N - 2, 0, -1):
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        f_z += (self.data["Vz"][self.__IND(i, j + 1, k)] if self.data["Vz"][self.__IND(i, j + 1, k)] < 0 else 0 * m) / self.dt
+                        break
+                    
+        return [f_x, f_y, f_z]
 
 
 from matplotlib.patches import FancyArrowPatch
