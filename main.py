@@ -101,14 +101,18 @@ def clear(fluid: Fluid):
 
 # Main settings-------------------------
 
+MAX_METRIC = 10**20
+
 def metric(Cx, Cy, Cz): # Aim - to minimize it
-    if Cz == 0 or Cx == 0: return 10**20
-    return abs(Cx / Cz)
+    if Cz < 1 or Cx == 0: return MAX_METRIC
+    return Cx / Cz
 
 DRAW = False
 DRAW_ARROWS = False
 DRAW_OBJ = False
 N = 6
+ITERATIONS = 20
+EPOCHS = 1000000
 D_T = 0.1
 VELOCITY_X = 2
 VELOCITY_Y = 0
@@ -129,7 +133,7 @@ POPULATION_SIZE = 100
 POOLING_SIZE = 15
 
 MUTATION_C = 0.5
-MUTATION_PROBABILITY = 0.35
+MUTATION_PROBABILITY = 0.6
 
 CROSS_PROBABILITY = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5] # GRU_Vx, GRU_Vy, GRU_Vz, Relu_Layer, Sigmoid_Layer, Out_Layer | greater -> more probability to take gens from first parent
 
@@ -137,7 +141,7 @@ CROSS_PROBABILITY = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5] # GRU_Vx, GRU_Vy, GRU_Vz, Rel
 
 if __name__ == "__main__":
 
-    best_score = 10**20
+    best_score = MAX_METRIC
 
     if DRAW:
         fig = plt.figure(1)
@@ -148,8 +152,9 @@ if __name__ == "__main__":
     init_fluid.set_obj(init_obj)
 
     population = [[Model(), init_fluid.copy(), 0]  for i in range(POPULATION_SIZE)]
-    for epoch in range(1000000):
-        for t in range(20):
+    for epoch in range(EPOCHS):
+        for t in range(ITERATIONS):
+            print("Epoch -", epoch, "Iteration -", t)
             if DRAW:
                 ax.cla()
                 ax.set_xlim(1, N - 1)
@@ -180,15 +185,11 @@ if __name__ == "__main__":
         for i in range(POPULATION_SIZE):
             f = population[i][1].forces_Newton()
             population[i][2] = metric(*f)
-
-            new_obj = population[i][0].compute(population[i][1].data["Vx"], population[i][1].data["Vy"], population[i][1].data["Vz"],
-                                                N, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT)
-            population[i][1].set_obj(new_obj)
             clear(population[i][1])
         
         population = sorted(population, key=lambda x: x[2])
         print([i[2] for i in population])
-        print("Best: ", population[0][2], " - metric", epoch)
+        print("Best: ", population[0][2], " - metric")
 
         population[0][0].get_weights().save("weights.npy")
 
@@ -214,5 +215,11 @@ if __name__ == "__main__":
                 else:
                     ch = random.choice([population[i][0].simple_relu, population[i][0].simple_sigmoid, population[i][0].simple_out])
                     Genetic.mutate_Simple_Layer(ch, a = MUTATION_C)
+        
+        print("Computing new objects")
+        for i in range(POPULATION_SIZE):
+            new_obj = population[i][0].compute(population[i][1].data["Vx"], population[i][1].data["Vy"], population[i][1].data["Vz"],
+                                                N, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT)
+            population[i][1].set_obj(new_obj)
     if DRAW:
         plt.show()

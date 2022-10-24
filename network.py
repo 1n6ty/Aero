@@ -199,20 +199,7 @@ class Model_Weights:
 
 
 class Model:
-    def __init__(self, weights: Model_Weights = None) -> None:
-        gru_u_weights = None
-        gru_v_weights = None
-        gru_w_weights = None
-        simple_relu_weights = None
-        simple_sigm_weights = None
-        simple_out_weights = None
-        if weights:
-            gru_u_weights = weights.gru_u_weights
-            gru_v_weights = weights.gru_v_weights
-            gru_w_weights = weights.gru_w_weights
-            simple_relu_weights = weights.simple_relu_weights
-            simple_sigm_weights = weights.simple_sigm_weights
-            simple_out_weights = weights.simple_out_weights
+    def __init__(self) -> None:
         self.gru_unit_u = GRU_unit()
         self.gru_unit_v = GRU_unit()
         self.gru_unit_w = GRU_unit()

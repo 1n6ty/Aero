@@ -103,7 +103,7 @@ if __name__ == "__main__":
     fig = plt.figure(1)
     ax = fig.add_subplot(111, projection='3d')
 
-    for t in range(1000):
+    for t in range(20):
         ax.cla()
         ax.set_xlim(1, N - 1)
         ax.set_ylim(1, N - 1)
@@ -124,8 +124,7 @@ if __name__ == "__main__":
                         ax.add_artist(arrow)
 
         ax.scatter(*obj_meshgrid(fluid.data["obj"], N), c = "#ff0000")
+        print("Forces: ", fluid.forces_Newton())
         plt.pause(0.5)
-    
-    print("Forces: ", fluid.forces_Newton())
 
     plt.show()
