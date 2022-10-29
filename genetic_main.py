@@ -113,8 +113,8 @@ def metric(Cx, Cy, Cz): # Aim - to minimize it
 DRAW = False
 DRAW_ARROWS = False
 DRAW_OBJ = False
-N = 6
-ITERATIONS = 20
+N = 100
+ITERATIONS = 30
 EPOCHS = 1000000
 D_T = 0.1
 VELOCITY_X = 2
@@ -123,17 +123,17 @@ VELOCITY_Z = 0
 
 # initial parallelipiped
 
-P_X = 2
-P_Y = 2
-P_Z = 2
-WIDTH = 2
-DEPTH = 2
-HEIGHT = 2
+P_X = 25
+P_Y = 25
+P_Z = 25
+WIDTH = 50
+DEPTH = 50
+HEIGHT = 50
 
 # Genetic algorithm settings------------
 
-POPULATION_SIZE = 100
-POOLING_SIZE = 15
+POPULATION_SIZE = 300
+POOLING_SIZE = 30
 
 MUTATION_C = 0.5
 MUTATION_PROBABILITY = 0.6
