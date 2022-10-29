@@ -49,7 +49,7 @@ class Simple_layer:
 class GRU_unit:
     def __init__(self, init_state = np.array([[0, 0, 0]])) -> None:
         self.state = init_state
-        self.weights = np.random.random((1, 9)) * 2 - 1
+        self.weights = (np.random.random((1, 9)) * 2 - 1) * 0.0001
     
     def forward(self, x):
         z = _Funcs.sigmoid(self.weights[0, 0] * x + self.weights[0, 3] * self.state + self.weights[0, 6])
@@ -64,65 +64,89 @@ class MD_GRU:
     def compute(arr_1D, N, gru_unit: GRU_unit):
         new_arr = [np.zeros((1, 3)) for i in range((N - 2)**3)]
         
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(1, N - 1):
             for j in range(1, N - 1):
                 for k in range(1, N - 1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i - 1] + state_arr[k, j - 1, i] + state_arr[k - 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i - 1, j, k, N)], arr_1D[_Funcs.IND(i, j - 1, k, N)], arr_1D[_Funcs.IND(i, j, k - 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(N - 2, 0, -1):
             for j in range(N - 2, 0, -1):
                 for k in range(N - 2, 0, -1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i + 1] + state_arr[k, j + 1, i] + state_arr[k + 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i + 1, j, k, N)], arr_1D[_Funcs.IND(i, j + 1, k, N)], arr_1D[_Funcs.IND(i, j, k + 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
         
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(N - 2, 0, -1):
             for j in range(1, N - 1):
                 for k in range(1, N - 1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i + 1] + state_arr[k, j - 1, i] + state_arr[k - 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i + 1, j, k, N)], arr_1D[_Funcs.IND(i, j - 1, k, N)], arr_1D[_Funcs.IND(i, j, k - 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(1, N - 1):
             for j in range(N - 2, 0, -1):
                 for k in range(N - 2, 0, -1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i - 1] + state_arr[k, j + 1, i] + state_arr[k + 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i - 1, j, k, N)], arr_1D[_Funcs.IND(i, j + 1, k, N)], arr_1D[_Funcs.IND(i, j, k + 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
 
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(1, N - 1):
             for j in range(N - 2, 0, -1):
                 for k in range(1, N - 1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i - 1] + state_arr[k, j + 1, i] + state_arr[k - 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i - 1, j, k, N)], arr_1D[_Funcs.IND(i, j + 1, k, N)], arr_1D[_Funcs.IND(i, j, k - 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(N - 2, 0, -1):
             for j in range(1, N - 1):
                 for k in range(N - 2, 0, -1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i + 1] + state_arr[k, j - 1, i] + state_arr[k + 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i + 1, j, k, N)], arr_1D[_Funcs.IND(i, j - 1, k, N)], arr_1D[_Funcs.IND(i, j, k + 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
         
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(1, N - 1):
             for j in range(1, N - 1):
                 for k in range(N - 2, 0, -1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i - 1] + state_arr[k, j - 1, i] + state_arr[k + 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i - 1, j, k, N)], arr_1D[_Funcs.IND(i, j - 1, k, N)], arr_1D[_Funcs.IND(i, j, k + 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
+        state_arr = np.zeros((N, N, N, 3))
         for i in range(N - 2, 0, -1):
             for j in range(N - 2, 0, -1):
                 for k in range(1, N - 1):
-                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += gru_unit.forward(np.array([[
+                    gru_unit.state = state_arr[k, j, i + 1] + state_arr[k, j + 1, i] + state_arr[k - 1, j, i]
+                    c = gru_unit.forward(np.array([[
                         arr_1D[_Funcs.IND(i + 1, j, k, N)], arr_1D[_Funcs.IND(i, j + 1, k, N)], arr_1D[_Funcs.IND(i, j, k - 1, N)]
                     ]]))
-        gru_unit.state = np.zeros((1, 3))
+                    new_arr[_Funcs.IND(i - 1, j - 1, k - 1, N - 2)] += c
+                    state_arr[k, j, i] = c
 
         return np.array(new_arr)
         

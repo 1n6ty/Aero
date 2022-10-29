@@ -87,7 +87,7 @@ def add_velocities(fluid: Fluid, x_amount, y_amount, z_amount): # adding velocit
                 fluid.data['Vy'][__IND(i, j, k, fluid.N)] += new_field_y[__IND(i, j, k, fluid.N)]
                 fluid.data['Vz'][__IND(i, j, k, fluid.N)] += new_field_z[__IND(i, j, k, fluid.N)]
 
-def clear(fluid: Fluid):
+def clear(fluid: Fluid, N):
     fluid.data["Vx0"] = [0 for i in range(N*N*N)]
     fluid.data["Vy0"] = [0 for i in range(N*N*N)]
     fluid.data["Vz0"] = [0 for i in range(N*N*N)]
@@ -98,6 +98,9 @@ def clear(fluid: Fluid):
     fluid.data["s"] = [0 for i in range(N*N*N)]
     fluid.data["div"] = [0 for i in range(N*N*N)]
     fluid.data["p"] = [0 for i in range(N*N*N)]
+
+def norm(arr_1D):
+    return (arr_1D - np.mean(arr_1D)) / (np.std(arr_1D) + 0.00001)
 
 # Main settings-------------------------
 
@@ -185,7 +188,7 @@ if __name__ == "__main__":
         for i in range(POPULATION_SIZE):
             f = population[i][1].forces_Newton()
             population[i][2] = metric(*f)
-            clear(population[i][1])
+            clear(population[i][1], N)
         
         population = sorted(population, key=lambda x: x[2])
         print([i[2] for i in population])
@@ -218,7 +221,9 @@ if __name__ == "__main__":
         
         print("Computing new objects")
         for i in range(POPULATION_SIZE):
-            new_obj = population[i][0].compute(population[i][1].data["Vx"], population[i][1].data["Vy"], population[i][1].data["Vz"],
+            new_obj = population[i][0].compute(norm(population[i][1].data["Vx"]), 
+                                                norm(population[i][1].data["Vy"]), 
+                                                norm(population[i][1].data["Vz"]),
                                                 N, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT)
             population[i][1].set_obj(new_obj)
     if DRAW:
