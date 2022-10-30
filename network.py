@@ -1,7 +1,6 @@
 from random import random
 import numpy as np
 
-
 class _Funcs:
     @staticmethod
     def relu(x):

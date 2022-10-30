@@ -110,11 +110,11 @@ def metric(Cx, Cy, Cz): # Aim - to minimize it
     if Cz < 1 or Cx == 0: return MAX_METRIC
     return Cx / Cz
 
-DRAW = False
+DRAW = True
 DRAW_ARROWS = False
-DRAW_OBJ = False
-N = 100
-ITERATIONS = 30
+DRAW_OBJ = True
+N = 10
+ITERATIONS = 20
 EPOCHS = 1000000000000
 D_T = 0.1
 VELOCITY_X = 2
@@ -123,17 +123,17 @@ VELOCITY_Z = 0
 
 # initial parallelipiped
 
-P_X = 25
-P_Y = 25
-P_Z = 25
-WIDTH = 50
-DEPTH = 50
-HEIGHT = 50
+P_X = 3
+P_Y = 3
+P_Z = 3
+WIDTH = 5
+DEPTH = 5
+HEIGHT = 5
 
 # Genetic algorithm settings------------
 
-POPULATION_SIZE = 300
-POOLING_SIZE = 30
+POPULATION_SIZE = 7
+POOLING_SIZE = 2
 
 MUTATION_C = 0.5
 MUTATION_PROBABILITY = 0.5
@@ -194,11 +194,10 @@ if __name__ == "__main__":
         print([i[2] for i in population])
         print("Best: ", population[0][2], " - metric")
 
-        population[0][0].get_weights().save("weights.npy")
-
-        if best_score > population[0][2]:
+        if best_score >= population[0][2]:
             best_score = population[0][2]
             np.save("obj.npy", np.array(population[0][1].data["obj"]))
+            population[0][0].get_weights().save("weights.npy")
 
         for i in range(POOLING_SIZE, POPULATION_SIZE):
             parent_1 = random.choice([j for j in range(POOLING_SIZE)])
