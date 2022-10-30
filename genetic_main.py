@@ -110,9 +110,9 @@ def metric(Cx, Cy, Cz): # Aim - to minimize it
     if Cz < 1 or Cx == 0: return MAX_METRIC
     return Cx / Cz
 
-DRAW = True
+DRAW = False
 DRAW_ARROWS = False
-DRAW_OBJ = True
+DRAW_OBJ = False
 N = 10
 ITERATIONS = 20
 EPOCHS = 1000000000000
