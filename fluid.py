@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import copy
 
 class Fluid:
 
@@ -25,7 +26,7 @@ class Fluid:
     
     def copy(self):
         new_fluid = Fluid(self.N, self.diff, self.visc, self.dt, self.iter)
-        new_fluid.data["obj"] = self.data["obj"]
+        new_fluid.data["obj"] = self.data["obj"][:]
         return new_fluid
 
     def __IND(self, x, y, z):
@@ -64,56 +65,26 @@ class Fluid:
                 self.data[x][self.__IND(i, j, 0)] = self.data[x][self.__IND(i, j, 1)]
                 self.data[x][self.__IND(i, j, self.N - 1)] = self.data[x][self.__IND(i, j, self.N - 2)]
 
-        if b == 0:
-            for k in range(1, self.N - 1):
-                for i in range(1, self.N - 1):
-                    for j in range(1, self.N - 1):
-                        if self.data["obj"][self.__IND(i, j, k)]:
-                            v = (self.data[x][self.__IND(i, j - 1, k)] if not self.data["obj"][self.__IND(i, j - 1, k)] else 0) + (self.data[x][self.__IND(i, j + 1, k)] if not self.data["obj"][self.__IND(i, j + 1, k)] else 0)\
-                                + (self.data[x][self.__IND(i + 1, j, k)] if not self.data["obj"][self.__IND(i + 1, j, k)] else 0) + (self.data[x][self.__IND(i - 1, j, k)] if not self.data["obj"][self.__IND(i - 1, j, k)] else 0)\
-                                + (self.data[x][self.__IND(i, j, k + 1)] if not self.data["obj"][self.__IND(i, j, k + 1)] else 0) + (self.data[x][self.__IND(i, j, k - 1)] if not self.data["obj"][self.__IND(i, j, k - 1)] else 0)
-                            c = (not self.data["obj"][self.__IND(i, j - 1, k)]) + (not self.data["obj"][self.__IND(i, j + 1, k)]) + (not self.data["obj"][self.__IND(i - 1, j, k)])\
-                                + (not self.data["obj"][self.__IND(i + 1, j, k)]) + (not self.data["obj"][self.__IND(i, j, k + 1)]) + (not self.data["obj"][self.__IND(i, j, k - 1)])
-                            self.data[x][self.__IND(i, j, k)] = v / c if c != 0 else 0
-        else:
-            for k in range(1, self.N - 1):
-                for i in range(1, self.N - 1):
-                    for j in range(1, self.N - 1):
-                        if self.data["obj"][self.__IND(i, j, k)]:
-                            self.data[x][self.__IND(i, j, k)] = 0
-
-            for k in range(1, self.N - 1):
-                for i in range(1, self.N - 1):
-                    for j in range(1, self.N - 1):
-                        if self.data["obj"][self.__IND(i, j, k)] and b == 2:
-                            self.data[x][self.__IND(i, j, k)] += -self.data["Vy"][self.__IND(i, j - 1, k)] if self.data["Vy"][self.__IND(i, j - 1, k)] > 0 else 0
-                            break
-                    for j in range(self.N - 2, 0, -1):
-                        if self.data["obj"][self.__IND(i, j, k)] and b == 2:
-                            self.data[x][self.__IND(i, j, k)] += -self.data["Vy"][self.__IND(i, j + 1, k)] if self.data["Vy"][self.__IND(i, j + 1, k)] < 0 else 0
-                            break
-            
-            for k in range(1, self.N - 1):
-                for j in range(1, self.N - 1):
-                    for i in range(1, self.N - 1):
-                        if self.data["obj"][self.__IND(i, j, k)] and b == 1:
-                            self.data[x][self.__IND(i, j, k)] += -self.data["Vx"][self.__IND(i - 1, j, k)] if self.data["Vx"][self.__IND(i - 1, j, k)] > 0 else 0
-                            break
-                    for i in range(self.N - 2, 0, -1):
-                        if self.data["obj"][self.__IND(i, j, k)] and b == 1:
-                            self.data[x][self.__IND(i, j, k)] += -self.data["Vx"][self.__IND(i + 1, j, k)] if self.data["Vx"][self.__IND(i + 1, j, k)] < 0 else 0
-                            break
-            
+        
+        for k in range(1, self.N - 1):
             for i in range(1, self.N - 1):
                 for j in range(1, self.N - 1):
-                    for k in range(1, self.N - 1):
-                        if self.data["obj"][self.__IND(i, j, k)] and b == 3:
-                            self.data[x][self.__IND(i, j, k)] += -self.data["Vz"][self.__IND(i, j, k - 1)] if self.data["Vz"][self.__IND(i, j, k - 1)] > 0 else 0
-                            break
-                    for k in range(self.N - 2, 0, -1):
-                        if self.data["obj"][self.__IND(i, j, k)] and b == 3:
-                            self.data[x][self.__IND(i, j, k)] += -self.data["Vz"][self.__IND(i, j, k + 1)] if self.data["Vz"][self.__IND(i, j, k + 1)] < 0 else 0
-                            break
+                    if self.data["obj"][self.__IND(i, j, k)]:
+                        if not self.data["obj"][self.__IND(i - 1, j, k)]:
+                            self.data["Vx"][self.__IND(i, j, k)] = (-1 if b == 1 else 1) * self.data["Vx"][self.__IND(i - 1, j, k)]
+                        if not self.data["obj"][self.__IND(i + 1, j, k)]:
+                            self.data["Vx"][self.__IND(i, j, k)] = (-1 if b == 1 else 1) * self.data["Vx"][self.__IND(i + 1, j, k)]
+                        
+                        if not self.data["obj"][self.__IND(i, j - 1, k)]:
+                            self.data["Vy"][self.__IND(i, j, k)] = (-1 if b == 2 else 1) * self.data["Vy"][self.__IND(i, j - 1, k)]
+                        if not self.data["obj"][self.__IND(i, j + 1, k)]:
+                            self.data["Vy"][self.__IND(i, j, k)] = (-1 if b == 2 else 1) * self.data["Vy"][self.__IND(i, j + 1, k)]
+                        
+                        if not self.data["obj"][self.__IND(i, j, k - 1)]:
+                            self.data["Vz"][self.__IND(i, j, k)] = (-1 if b == 3 else 1) * self.data["Vz"][self.__IND(i, j, k - 1)]
+                        if not self.data["obj"][self.__IND(i, j + 1, k)]:
+                            self.data["Vz"][self.__IND(i, j, k)] = (-1 if b == 3 else 1) * self.data["Vz"][self.__IND(i, j, k + 1)]
+                            
 
     def linear_solver(self, b, a, c, x, x0):
         c = 1 / c
@@ -154,6 +125,37 @@ class Fluid:
         self.set_bnd(2, Vy)
         self.set_bnd(3, Vz)
     
+    def _search4edge(self, x, y, z):
+        res = [[], [], []]
+        for i in range(x, -1, -1):
+            if self.data["obj"][self.__IND(i, y, z)] or i == 0:
+                res[0].append(i)
+                break
+        for i in range(x, self.N):
+            if self.data["obj"][self.__IND(i, y, z)] or i == self.N - 1:
+                res[0].append(i)
+                break
+        
+        for j in range(y, -1, -1):
+            if self.data["obj"][self.__IND(x, j, z)] or j == 0:
+                res[1].append(j)
+                break
+        for j in range(y, self.N):
+            if self.data["obj"][self.__IND(x, j, z)] or j == self.N - 1:
+                res[1].append(j)
+                break
+        
+        for k in range(z, -1, -1):
+            if self.data["obj"][self.__IND(x, y, k)] or k == 0:
+                res[2].append(k)
+                break
+        for k in range(z, self.N):
+            if self.data["obj"][self.__IND(x, y, k)] or k == self.N - 1:
+                res[2].append(k)
+                break
+        
+        return res
+
     def advect(self, b, d, d0, Vx, Vy, Vz):
         for k in range(1, self.N - 1):
             for i in range(1, self.N - 1):
@@ -167,16 +169,17 @@ class Fluid:
                     y = j - tmp2
                     z = k - tmp3
 
-                    if x < 0.5: x = 0.5 
-                    if x > self.N - 1.5: x = self.N - 1.5
+                    edge = self._search4edge(i, j, k)
+                    if x < edge[0][0]: x = edge[0][0]
+                    if x > edge[0][1]: x = edge[0][1]
                     i0 = math.floor(x)
                     i1 = i0 + 1
-                    if y < 0.5: y = 0.5 
-                    if y > self.N - 1.5: y = self.N - 1.5
+                    if y < edge[1][0]: y = edge[1][0]
+                    if y > edge[1][1]: y = edge[1][1]
                     j0 = math.floor(y)
                     j1 = j0 + 1
-                    if z < 0.5: z = 0.5 
-                    if z > self.N - 1.5: z = self.N - 1.5
+                    if z < edge[2][0]: z = edge[2][0]
+                    if z > edge[2][1]: z = edge[2][1]
                     k0 = math.floor(z)
                     k1 = k0 + 1
 
@@ -214,36 +217,22 @@ class Fluid:
             for i in range(1, self.N - 1):
                 for j in range(1, self.N - 1):
                     if self.data["obj"][self.__IND(i, j, k)]:
-                        f_y += (self.data["Vy"][self.__IND(i, j - 1, k)] if self.data["Vy"][self.__IND(i, j - 1, k)] > 0 else 0 * m) / self.dt
-                        break
-                for j in range(self.N - 2, 0, -1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        f_y += (self.data["Vy"][self.__IND(i, j + 1, k)] if self.data["Vy"][self.__IND(i, j + 1, k)] < 0 else 0 * m) / self.dt
-                        break
-        
-        for k in range(1, self.N - 1):
-            for j in range(1, self.N - 1):
-                for i in range(1, self.N - 1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        f_x += (self.data["Vx"][self.__IND(i, j - 1, k)] if self.data["Vx"][self.__IND(i, j - 1, k)] > 0 else 0 * m) / self.dt
-                        break
-                for i in range(self.N - 2, 0, -1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        f_x += (self.data["Vx"][self.__IND(i, j + 1, k)] if self.data["Vx"][self.__IND(i, j + 1, k)] < 0 else 0 * m) / self.dt
-                        break
-        
-        for i in range(1, self.N - 1):
-            for j in range(1, self.N - 1):
-                for k in range(1, self.N - 1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        f_z += (self.data["Vz"][self.__IND(i, j - 1, k)] if self.data["Vz"][self.__IND(i, j - 1, k)] > 0 else 0 * m) / self.dt
-                        break
-                for k in range(self.N - 2, 0, -1):
-                    if self.data["obj"][self.__IND(i, j, k)]:
-                        f_z += (self.data["Vz"][self.__IND(i, j + 1, k)] if self.data["Vz"][self.__IND(i, j + 1, k)] < 0 else 0 * m) / self.dt
-                        break
-                    
-        return [f_x, f_y, f_z]
+                        if not self.data["obj"][self.__IND(i - 1, j, k)]:
+                            f_x += (self.data["Vx"][self.__IND(i - 1, j, k)] if self.data["Vx"][self.__IND(i - 1, j, k)] > 0 else 0) * m / self.dt
+                        if not self.data["obj"][self.__IND(i - 1, j, k)]:
+                            f_x += (self.data["Vx"][self.__IND(i + 1, j, k)] if self.data["Vx"][self.__IND(i + 1, j, k)] < 0 else 0) * m / self.dt
+
+                        if not self.data["obj"][self.__IND(i, j - 1, k)]:
+                            f_y += (self.data["Vy"][self.__IND(i, j - 1, k)] if self.data["Vy"][self.__IND(i, j - 1, k)] > 0 else 0) * m / self.dt
+                        if not self.data["obj"][self.__IND(i, j + 1, k)]:
+                            f_y += (self.data["Vy"][self.__IND(i, j + 1, k)] if self.data["Vy"][self.__IND(i, j + 1, k)] < 0 else 0) * m / self.dt
+
+                        if not self.data["obj"][self.__IND(i, j, k - 1)]:
+                            f_z += (self.data["Vz"][self.__IND(i, j, k - 1)] if self.data["Vz"][self.__IND(i, j, k - 1)] > 0 else 0) * m / self.dt
+                        if not self.data["obj"][self.__IND(i, j, k + 1)]:
+                            f_z += (self.data["Vz"][self.__IND(i, j, k + 1)] if self.data["Vz"][self.__IND(i, j, k + 1)] < 0 else 0) * m / self.dt
+                        
+        return np.array([f_x, f_y, f_z])
 
 
 from matplotlib.patches import FancyArrowPatch
@@ -274,3 +263,97 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
 
         return np.min(zs) 
+
+def get_arrow_artists(fluid: Fluid, N):
+    res = []
+
+    u = fluid.data["Vx"]
+    v = fluid.data["Vy"]
+    w = fluid.data["Vz"]
+
+    for i in range(N):
+        for j in range(N):
+            for k in range(N):
+                if not fluid.data["obj"][_Funcs.IND(i, j, k, N)]:
+                    res.append(Arrow3D(i, j, k, u[_Funcs.IND(i, j, k, N)], v[_Funcs.IND(i, j, k, N)], w[_Funcs.IND(i, j, k, N)], mutation_scale=20, lw=1, arrowstyle="-|>", color="k"))
+    return res
+
+from network import _Funcs
+
+def add_velocities(fluid: Fluid, x_amount, y_amount, z_amount): # adding velocities to field
+    new_field_x = [0 for i in range(fluid.N ** 3)]
+    new_field_y = [0 for i in range(fluid.N ** 3)]
+    new_field_z = [0 for i in range(fluid.N ** 3)] 
+
+    for k in range(1, fluid.N - 1):
+        for i in range(1, fluid.N - 1):
+            if y_amount > 0:
+                for j in range(1, fluid.N - 1):
+                    new_field_y[_Funcs.IND(i, j - 1, k, fluid.N)] = y_amount
+                    if fluid.data["obj"][_Funcs.IND(i, j, k, fluid.N)]:
+                        break
+            else:
+                for j in range(fluid.N - 2, 0, -1):
+                    new_field_y[_Funcs.IND(i, j + 1, k, fluid.N)] = y_amount
+                    if fluid.data["obj"][_Funcs.IND(i, j, k, fluid.N)]:
+                        break
+    
+    for k in range(1, fluid.N - 1):
+        for j in range(1, fluid.N - 1):
+            if x_amount > 0:
+                for i in range(1, fluid.N - 1):
+                    new_field_x[_Funcs.IND(i - 1, j, k, fluid.N)] = x_amount
+                    if fluid.data["obj"][_Funcs.IND(i, j, k, fluid.N)]:
+                        break
+            else:
+                for i in range(fluid.N - 2, 0, -1):
+                    new_field_x[_Funcs.IND(i + 1, j, k, fluid.N)] = x_amount
+                    if fluid.data["obj"][_Funcs.IND(i, j, k, fluid.N)]:
+                        break
+    
+    for i in range(1, fluid.N - 1):
+        for j in range(1, fluid.N - 1):
+            if z_amount > 0:
+                for k in range(1, fluid.N - 1):
+                    new_field_z[_Funcs.IND(i, j, k - 1, fluid.N)] = z_amount
+                    if fluid.data["obj"][_Funcs.IND(i, j, k, fluid.N)]:
+                        break
+            else:
+                for k in range(fluid.N - 2, 0, -1):
+                    new_field_z[_Funcs.IND(i, j, k + 1, fluid.N)] = z_amount
+                    if fluid.data["obj"][_Funcs.IND(i, j, k, fluid.N)]:
+                        break
+
+    for i in range(1, fluid.N - 1):
+        for j in range(1, fluid.N - 1):
+            for k in range(1, fluid.N - 1):
+                fluid.data['Vx'][_Funcs.IND(i, j, k, fluid.N)] += new_field_x[_Funcs.IND(i, j, k, fluid.N)]
+                fluid.data['Vy'][_Funcs.IND(i, j, k, fluid.N)] += new_field_y[_Funcs.IND(i, j, k, fluid.N)]
+                fluid.data['Vz'][_Funcs.IND(i, j, k, fluid.N)] += new_field_z[_Funcs.IND(i, j, k, fluid.N)]
+
+def clear_env(N, POPULATION_SIZE, population, init_env):
+    for i in range(POPULATION_SIZE):
+        population[i][1].data["Vx0"] = [0 for j in range(N*N*N)]
+        population[i][1].data["Vy0"] = [0 for j in range(N*N*N)]
+        population[i][1].data["Vz0"] = [0 for j in range(N*N*N)]
+        population[i][1].data["Vx"] = [0 for j in range(N*N*N)]
+        population[i][1].data["Vy"] = [0 for j in range(N*N*N)]
+        population[i][1].data["Vz"] = [0 for j in range(N*N*N)]
+        population[i][1].data["density"] = [0 for j in range(N*N*N)]
+        population[i][1].data["s"] = [0 for j in range(N*N*N)]
+        population[i][1].data["div"] = [0 for j in range(N*N*N)]
+        population[i][1].data["p"] = [0 for j in range(N*N*N)]
+        population[i][1].data["obj"] = init_env[:]
+
+def fluid_compute(epsilon, fluid: Fluid, v_x, v_y, v_z):
+    prev_force = np.array([epsilon + 1, epsilon + 1, epsilon + 1])
+    force = np.array([0, 0, 0])
+
+    while np.max(np.abs(prev_force - force)) > epsilon:
+        prev_force = np.array(force)
+
+        add_velocities(fluid, v_x, v_y, v_z)
+        fluid.step()
+
+        force = fluid.forces_Newton()
+    return force

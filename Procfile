@@ -1,1 +1,0 @@
-worker: python genetic_main.py 
