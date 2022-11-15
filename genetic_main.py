@@ -26,13 +26,13 @@ HEIGHT = 5
 
 # Genetic algorithm settings------------
 
-POPULATION_SIZE = 20 # only even numbers
-POOLING_SIZE = 5
+POPULATION_SIZE = 100 # only even numbers
+POOLING_SIZE = 20
 
 MUTATION_C = 0.3
 MUTATION_PROBABILITY = 0.9
 
-CROSS_DISTRIBUTION_INDEX = 0.5
+CROSS_DISTRIBUTION_INDEX = 2
 
 # Main settings-------------------------
 
