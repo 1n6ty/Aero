@@ -26,8 +26,10 @@ HEIGHT = 3
 
 if __name__ == "__main__":
     #init initial enviroment and initial fluid object 
-    #TODO creating enviroment
-    init_env = [0 for i in range(N*N*N)]
+    if len(sys.argv) < 2:
+        raise ValueError('Enviromental map must be provided')
+
+    init_env = list(np.load(sys.argv[1]))
 
     init_fluid = Fluid(N, 1, 0.0017, D_T, 4)
     init_fluid.set_obj(init_env)
@@ -46,8 +48,8 @@ if __name__ == "__main__":
     main_model= [Model(C_Vn=4), init_fluid.copy()]
 
     # setting weights if provided
-    if len(sys.argv) > 1:
-        model_weights = Model_Weights.load(sys.argv[1])
+    if len(sys.argv) > 2:
+        model_weights = Model_Weights.load(sys.argv[2])
         main_model[0].set_weights(model_weights)
 
     # starting learning

@@ -45,8 +45,10 @@ if __name__ == "__main__":
     best_score = float("inf")
 
     #init initial enviroment and initial fluid object 
-    # TODO creating enviroment
-    init_env = [0 for i in range(N*N*N)]
+    if len(sys.argv) < 2:
+        raise ValueError('Enviromental map must be provided')
+
+    init_env = list(np.load(sys.argv[1]))
 
     init_fluid = Fluid(N, 1, 0.0017, D_T, 4)
     init_fluid.set_obj(init_env)
@@ -55,10 +57,10 @@ if __name__ == "__main__":
     population = [[Model(C_Vn=C_Vn), init_fluid.copy(), float("inf")]  for i in range(POPULATION_SIZE)]
 
     # setting weights if provided
-    if len(sys.argv) > 1:
-        for i in range(1, len(sys.argv)):
+    if len(sys.argv) > 2:
+        for i in range(2, len(sys.argv)):
             model_weights = Model_Weights.load(sys.argv[i])
-            population[i - 1][0].set_weights(model_weights)
+            population[i - 2][0].set_weights(model_weights)
 
     # starting learning
     # Computing enviroment
