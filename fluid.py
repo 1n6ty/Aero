@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import copy
 
 class Fluid:
 
@@ -48,7 +47,6 @@ class Fluid:
         self.data["Vy"][self.__IND(x, y, z)] = amount_y
         self.data["Vz"][self.__IND(x, y, z)] = amount_z
 
-    #fix bnd for objects
     def set_bnd(self, b, x):
         for k in range(1, self.N - 1):
             for i in range(1, self.N - 1):
@@ -345,15 +343,20 @@ def clear_env(N, POPULATION_SIZE, population, init_env):
         population[i][1].data["p"] = [0 for j in range(N*N*N)]
         population[i][1].data["obj"] = init_env[:]
 
-def fluid_compute(epsilon, fluid: Fluid, v_x, v_y, v_z):
+def fluid_compute(epsilon, max_iter, fluid: Fluid, v_x, v_y, v_z):
     prev_force = np.array([epsilon + 1, epsilon + 1, epsilon + 1])
     force = np.array([0, 0, 0])
 
-    while np.max(np.abs(prev_force - force)) > epsilon:
+    iter = 0
+
+    while np.max(np.abs(prev_force - force)) > epsilon and iter < max_iter:
         prev_force = np.array(force)
 
         add_velocities(fluid, v_x, v_y, v_z)
         fluid.step()
 
         force = fluid.forces_Newton()
+
+        iter += 1
+    
     return force

@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from network import _Funcs, Model, Model_Weights
 from object_draw import obj_meshgrid, draw_contour
-from fluid import Fluid, Arrow3D, add_velocities, fluid_compute
+from fluid import Fluid, Arrow3D, add_velocities, fluid_compute, clear_env
 
 # Main settings-------------------------
 
@@ -19,35 +19,40 @@ VELOCITY_Y = 0
 VELOCITY_Z = 0
 
 EPSILON = 0.01
+MAX_ITER = 40
 
 P_X = 3
 P_Y = 3
 P_Z = 3
 WIDTH = 5
 DEPTH = 5
-HEIGHT = 3
+HEIGHT = 5
 
 # Main settings-------------------------
 
 if __name__ == "__main__":
 
     f = input("Filename: ")
-    N = int(input("N: "))
 
+    env_f = input('Env: ')
+    init_env = list(np.load(env_f))
+
+    N = int(pow(len(init_env), 0.33)) + 1
+    
     fluid = Fluid(N, 1, 0.0017, D_T, 4)
-    fluid_compute(EPSILON, fluid, VELOCITY_X, VELOCITY_Y, VELOCITY_Z)
+    fluid.set_obj(init_env)
+    fluid_compute(EPSILON, MAX_ITER, fluid, VELOCITY_X, VELOCITY_Y, VELOCITY_Z)
 
-    main_model = [Model(C_Vn=4), fluid]
+    main_model = [Model(WIDTH * HEIGHT * DEPTH, C_Vn=4), fluid]
     main_model[0].set_weights(Model_Weights.load(f))
     
     contours = []
     for j in range(WIDTH):
-        contours.append(main_model[0].compute(*_Funcs.norm_velocities(
-                                    np.array(main_model[1].data["Vx"]),
-                                    np.array(main_model[1].data["Vy"]),
-                                    np.array(main_model[1].data["Vz"])),
-                                    P_X, P_Y, P_Z,
-                                    WIDTH, DEPTH, HEIGHT, j, N))
+        contours.append(main_model[0].compute(main_model[1].data["Vx"],
+                                            main_model[1].data["Vy"],
+                                            main_model[1].data["Vz"],
+                                            P_X, P_Y, P_Z,
+                                            WIDTH, DEPTH, HEIGHT, j, N))
     c, v = [], []
     for c_v in contours:
         cr = c_v[0, : int(c_v.shape[1] // 3)]
@@ -57,10 +62,9 @@ if __name__ == "__main__":
     
     print('C, V:', c, v, sep='\n\n')
 
-    new_obj = [0 for i in range(N * N * N)]
-    draw_contour(new_obj, c, v, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
+    draw_contour(init_env, c, v, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
 
-    fluid.set_obj(new_obj)
+    clear_env(N, 1, [main_model], init_env)
 
     fig = plt.figure(1)
     ax = fig.add_subplot(111, projection='3d')

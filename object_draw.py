@@ -72,17 +72,17 @@ def fill_contour(map_3d, x, y, z, w, h, N):
                 check_and_fill(map_3d, x, y, z, w, h, col_id, row_id, N)        
 
 def edge(x, z, f, f1, w, h):
-    x1 = int(x + f.real)
+    x1 = int(x + f.real * w)
     if x1 > x + w - 1: x1 = x + w - 1
     if x1 < x: x1 = x
-    x2 = int(x + f1.real)
+    x2 = int(x + f1.real * w)
     if x2 > x + w - 1: x2 = x + w - 1
     if x2 < x: x2 = x
 
-    z1 = int(z + f.imag)
+    z1 = int(z + f.imag * h)
     if z1 > z + h - 1: z1 = z + h - 1
     if z1 < z: z1 = z
-    z2 = int(z + f1.imag)
+    z2 = int(z + f1.imag * h)
     if z2 > z + h - 1: z2 = z + h - 1
     if z2 < z: z2 = z
     return [x1, z1, x2, z2]
@@ -118,7 +118,7 @@ def compute_new_objects(POPULATION_SIZE, population, N, P_X, P_Y, P_Z, WIDTH, DE
 
             draw_contour(population[i][1].data["obj"], c, v, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, step)
         except:
-            population[i] = [Model(C_Vn=C_Vn), env_obj.copy(), float("inf")]
+            population[i] = [Model(WIDTH * HEIGHT * DEPTH, C_Vn=C_Vn), env_obj.copy(), float("inf")]
 
 def obj_meshgrid(obj, N): # generating meshgrid of object to draw in plt
     x, y, z = [], [], []
