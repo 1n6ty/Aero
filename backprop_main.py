@@ -6,7 +6,7 @@ from network import Model, Model_Weights, backpropagation
 # Main settings-------------------------
 
 N = 10
-EPOCHS = 200
+EPOCHS = 400
 EPSILON = 0.01
 MAX_ITER = 40
 D_T = 0.1
@@ -37,17 +37,15 @@ if __name__ == "__main__":
     init_fluid.set_obj(init_env)
 
     init_objects = [
-        [
-            np.array([[0.5, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0, 1]]),
-            np.array([[0.5, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0, 1]]),
-            np.array([[0.5, 0, 0, 0.5, 0, 0, 0, 0, 0, 0, 0, 1]]),
-            np.array([[0.5, 0, 0, 0.3, 0, 0, 0, 0, 0, 0, 0, 1]]),
-            np.array([[0.5, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0, 1]]),
-        ]
+        np.array([[0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0,]])
     ]
 
     # init main model
-    main_model = [Model(WIDTH * HEIGHT * DEPTH, C_Vn=4), init_fluid.copy()]
+    main_model = [Model(WIDTH * HEIGHT * DEPTH, Cn=2, d = DEPTH), init_fluid.copy()]
 
     # setting weights if provided
     if len(sys.argv) > 2:
@@ -56,20 +54,19 @@ if __name__ == "__main__":
 
     # starting learning
     # Computing enviroment
-    fluid_compute(EPSILON, MAX_ITER, init_fluid, VELOCITY_X, VELOCITY_Y, VELOCITY_Z)
+    fluid_compute(EPSILON, MAX_ITER, init_fluid, -1, VELOCITY_X, VELOCITY_Y, VELOCITY_Z, dict(), ignore_epsilon=True)
 
     #starting epoch
     for epoch in range(EPOCHS):
         # Computing objects
         print("Epoch -", epoch + 1, '- Computing models:')
         for i in init_objects:
-            for j in range(WIDTH):
-                out = main_model[0].compute(main_model[1].data["Vx"],
-                                            main_model[1].data["Vy"],
-                                            main_model[1].data["Vz"],
-                                            P_X, P_Y, P_Z,
-                                            WIDTH, DEPTH, HEIGHT, j, N)
-                backpropagation(main_model, out, i[j], epoch + 1, a = 0.3)
+            out = main_model[0].compute(main_model[1].data["Vx"],
+                                        main_model[1].data["Vy"],
+                                        main_model[1].data["Vz"],
+                                        P_X, P_Y, P_Z,
+                                        WIDTH, DEPTH, HEIGHT, N)
+            backpropagation(main_model, out, i, epoch + 1, a = 0.3)
 
         print('\n\n\n')
 

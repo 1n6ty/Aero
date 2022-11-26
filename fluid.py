@@ -343,13 +343,13 @@ def clear_env(N, POPULATION_SIZE, population, init_env):
         population[i][1].data["p"] = [0 for j in range(N*N*N)]
         population[i][1].data["obj"] = init_env[:]
 
-def fluid_compute(epsilon, max_iter, fluid: Fluid, v_x, v_y, v_z):
+def fluid_compute(epsilon, max_iter, fluid: Fluid, j, v_x, v_y, v_z, manager_dict, ignore_epsilon = False):
     prev_force = np.array([epsilon + 1, epsilon + 1, epsilon + 1])
     force = np.array([0, 0, 0])
 
     iter = 0
 
-    while np.max(np.abs(prev_force - force)) > epsilon and iter < max_iter:
+    while (ignore_epsilon or np.max(np.abs(prev_force - force)) > epsilon) and iter < max_iter:
         prev_force = np.array(force)
 
         add_velocities(fluid, v_x, v_y, v_z)
@@ -359,4 +359,4 @@ def fluid_compute(epsilon, max_iter, fluid: Fluid, v_x, v_y, v_z):
 
         iter += 1
     
-    return force
+    manager_dict[j] = force

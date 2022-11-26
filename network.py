@@ -125,11 +125,12 @@ class Simple_layer:
 
 
 class Model_Weights:
-    def __init__(self, layer_1_weights, layer_2_weights, layer_3_weights, layer_out_weights) -> None:
+    def __init__(self, layer_1_weights, layer_2_weights, layer_3_weights, layer_4_weights, layer_out_weights) -> None:
 
         self.layer_1_weights = layer_1_weights
         self.layer_2_weights = layer_2_weights
         self.layer_3_weights = layer_3_weights
+        self.layer_4_weights = layer_4_weights
         self.layer_out_weights = layer_out_weights
 
     def save(self, filename):
@@ -137,6 +138,7 @@ class Model_Weights:
             np.save(f, self.layer_1_weights)
             np.save(f, self.layer_2_weights)
             np.save(f, self.layer_3_weights)
+            np.save(f, self.layer_4_weights)
             np.save(f, self.layer_out_weights)
 
     @staticmethod
@@ -145,21 +147,24 @@ class Model_Weights:
             layer_1_weights = np.load(f)
             layer_2_weights = np.load(f)
             layer_3_weights = np.load(f)
+            layer_4_weights = np.load(f)
             layer_out_weights = np.load(f)
 
-        return Model_Weights(layer_1_weights, layer_2_weights, layer_3_weights, layer_out_weights)
+        return Model_Weights(layer_1_weights, layer_2_weights, layer_3_weights, layer_4_weights, layer_out_weights)
 
 class Model:
-    def __init__(self, arr_shape, C_Vn) -> None:
-        self.layer_1 = Simple_layer(input_size=arr_shape*3 + 1, output_size=arr_shape*3, activation_func='relu')
-        self.layer_2 = Simple_layer(input_size=arr_shape*3, output_size=arr_shape*3, activation_func='sigm')
-        self.layer_3 = Simple_layer(input_size=arr_shape*3, output_size=32, activation_func='sigm')
-        self.layer_out = Simple_layer(input_size=32, output_size=3 * C_Vn, activation_func='linear')
+    def __init__(self, arr_shape, Cn, d) -> None:
+        self.layer_1 = Simple_layer(input_size=arr_shape * 3, output_size=128, activation_func='relu')
+        self.layer_2 = Simple_layer(input_size=128, output_size=128, activation_func='sigm')
+        self.layer_3 = Simple_layer(input_size=128, output_size=128, activation_func='relu')
+        self.layer_4 = Simple_layer(input_size=128, output_size=32, activation_func='sigm')
+        self.layer_out = Simple_layer(input_size=32, output_size=(Cn * 4 + 2) * d, activation_func='linear')
 
     def set_weights(self, model: Model_Weights):
         self.layer_1.weights = model.layer_1_weights
         self.layer_2.weights = model.layer_2_weights
         self.layer_3.weights = model.layer_3_weights
+        self.layer_4.weights = model.layer_4_weights
         self.layer_out.weights = model.layer_out_weights
 
     def get_weights(self):
@@ -167,9 +172,10 @@ class Model:
                     self.layer_1.weights,
                     self.layer_2.weights,
                     self.layer_3.weights,
+                    self.layer_4.weights,
                     self.layer_out.weights)
 
-    def compute(self, V_x_1D, V_y_1D, V_z_1D, x, y, z, w, d, h, t, N):
+    def compute(self, V_x_1D, V_y_1D, V_z_1D, x, y, z, w, d, h, N):
         V_n_x, V_n_y, V_n_z = [], [], []
         for k in range(z, z + h):
             for j in range(y, y + d):
@@ -180,12 +186,13 @@ class Model:
 
         V_n_x, V_n_y, V_n_z = _Funcs.norm_velocities(V_n_x, V_n_y, V_n_z)
 
-        inp = np.array([np.append(np.append(np.append(V_n_x, V_n_y), V_n_z), [t / ((d - 1) if d != 1 else 1)])])
+        inp = np.array([np.append(np.append(V_n_x, V_n_y), V_n_z)])
 
         l_1 = self.layer_1.forward(inp)
         l_2 = self.layer_2.forward(l_1)
         l_3 = self.layer_3.forward(l_2)
-        out = self.layer_out.forward(l_3)
+        l_4 = self.layer_4.forward(l_3)
+        out = self.layer_out.forward(l_4)
         
         return out
 
@@ -223,6 +230,7 @@ class Genetic:
             population[i][0].layer_1.weights, population[i + 1][0].layer_1.weights = Genetic.cross(population[parent_1][0].layer_1, population[parent_2][0].layer_1, CROSS_DISTRIBUTION_INDEX)
             population[i][0].layer_2.weights, population[i + 1][0].layer_2.weights = Genetic.cross(population[parent_1][0].layer_2, population[parent_2][0].layer_2, CROSS_DISTRIBUTION_INDEX)
             population[i][0].layer_3.weights, population[i + 1][0].layer_3.weights = Genetic.cross(population[parent_1][0].layer_3, population[parent_2][0].layer_3, CROSS_DISTRIBUTION_INDEX)
+            population[i][0].layer_4.weights, population[i + 1][0].layer_4.weights = Genetic.cross(population[parent_1][0].layer_4, population[parent_2][0].layer_4, CROSS_DISTRIBUTION_INDEX)
             population[i][0].layer_out.weights, population[i + 1][0].layer_out.weights = Genetic.cross(population[parent_1][0].layer_out, population[parent_2][0].layer_out, CROSS_DISTRIBUTION_INDEX)
 
             if random() < MUTATION_PROBABILITY:
@@ -235,6 +243,7 @@ def backpropagation(obj, out, y, t, a = 0.1):
     dl = _Funcs.dMSE(out, np.array(y))
 
     dl1 = obj[0].layer_out.backward(dl, t, a)
-    dl2 = obj[0].layer_3.backward(dl1, t, a)
-    dl3 = obj[0].layer_2.backward(dl2, t, a)
-    dl4 = obj[0].layer_1.backward(dl3, t, a)
+    dl2 = obj[0].layer_4.backward(dl1, t, a)
+    dl3 = obj[0].layer_3.backward(dl2, t, a)
+    dl4 = obj[0].layer_2.backward(dl3, t, a)
+    dl5 = obj[0].layer_1.backward(dl4, t, a)

@@ -4,13 +4,15 @@ from fluid import Fluid, fluid_compute, clear_env
 from network import Model, Model_Weights, Genetic
 from object_draw import compute_new_objects
 
+import multiprocessing
+
 # Main settings-------------------------
 
 N = 10
 EPSILON = 0.01
 MAX_ITER = 40
 EPOCHS = 1000000000000
-C_Vn = 4
+Cn = 2
 D_T = 0.1
 VELOCITY_X = 2
 VELOCITY_Y = 0
@@ -37,11 +39,13 @@ CROSS_DISTRIBUTION_INDEX = 0.5
 
 # Main settings-------------------------
 
-def metric(Cx, Cy, Cz, obj): # Aim -> to minimize it
+def metric(Cx, Cy, Cz): # Aim -> to minimize it
     if Cz <= 0: return float("inf")
     return Cx / Cz
 
 if __name__ == "__main__":
+    manager_dict = multiprocessing.Manager().dict()
+
     # init best_score
     best_score = float("inf")
 
@@ -55,7 +59,7 @@ if __name__ == "__main__":
     init_fluid.set_obj(init_env)
 
     # init initial population
-    population = [[Model(WIDTH * HEIGHT * DEPTH, C_Vn=C_Vn), init_fluid.copy(), float("inf")]  for i in range(POPULATION_SIZE)]
+    population = [[Model(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), init_fluid.copy(), float("inf")]  for i in range(POPULATION_SIZE)]
 
     # setting weights if provided
     if len(sys.argv) > 2:
@@ -65,8 +69,7 @@ if __name__ == "__main__":
 
     # starting learning
     # Computing enviroment
-    fluid_compute(EPSILON, MAX_ITER, init_fluid, VELOCITY_X, VELOCITY_Y, VELOCITY_Z)
-
+    fluid_compute(EPSILON, MAX_ITER, init_fluid, -1, VELOCITY_X, VELOCITY_Y, VELOCITY_Z, manager_dict, ignore_epsilon=True)
     #starting epoch
     for epoch in range(EPOCHS):
         # Computing objects
@@ -75,14 +78,28 @@ if __name__ == "__main__":
         
         # Putting objects into enviroment
         print("Epoch -", epoch + 1, '- Computing velocities and metrics:')
+        computes = []
+        try:
+            for i in range(POPULATION_SIZE):
+                p = multiprocessing.Process(target=fluid_compute, args=(EPSILON, MAX_ITER, population[i][1], i, VELOCITY_X, VELOCITY_Y, VELOCITY_Z, manager_dict))
+                computes.append(p)
+                p.start()
+            
+            for pr in computes:
+                pr.join()
+            
+        except KeyboardInterrupt:
+            for pr in computes: 
+                pr.terminate()
+
         for i in range(POPULATION_SIZE):
-            f = fluid_compute(EPSILON, MAX_ITER, population[i][1], VELOCITY_X, VELOCITY_Y, VELOCITY_Z)
-            population[i][2] = metric(*list(f), population[i][1].data["obj"])
-        
+            print(manager_dict[i])
+            population[i][2] = metric(*manager_dict[i])
+
         # Sorting population and removing duplicates
         for i in range(len(population)):
             if population[i][2] != float("inf") and population[i][2] in [j[2] for j in population[:i]]:
-                population[i] = [Model(WIDTH * HEIGHT * DEPTH, C_Vn=C_Vn), init_fluid.copy(), float("inf")]
+                population[i] = [Model(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), init_fluid.copy(), float("inf")]
 
         population = sorted(population, key=lambda x: x[2]) 
         print("Epoch -", epoch + 1, "- Population metrics:", [i[2] for i in population])

@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from network import _Funcs, Model, Model_Weights
@@ -6,10 +7,6 @@ from fluid import Fluid, Arrow3D, add_velocities, fluid_compute, clear_env
 
 # Main settings-------------------------
 
-def metric(Cx, Cy, Cz): # Aim - to minimize it
-    if Cz < 0 or Cx == 0: return float("inf")
-    return np.log(Cz)
-
 DRAW_ARROWS = False
 DRAW_OBJ = True
 
@@ -17,6 +14,7 @@ D_T = 0.1
 VELOCITY_X = 2
 VELOCITY_Y = 0
 VELOCITY_Z = 0
+Cn = 2
 
 EPSILON = 0.01
 MAX_ITER = 40
@@ -32,37 +30,42 @@ HEIGHT = 5
 
 if __name__ == "__main__":
 
-    f = input("Filename: ")
+    if len(sys.argv) < 2:
+        raise ValueError("Weights file should be provided")
+    elif len(sys.argv) < 3:
+        raise ValueError("Enviroment file should be provided")
+    else:
+        f = sys.argv[1]
+        env_f = sys.argv[2]
 
-    env_f = input('Env: ')
     init_env = list(np.load(env_f))
 
     N = int(pow(len(init_env), 0.33)) + 1
     
     fluid = Fluid(N, 1, 0.0017, D_T, 4)
     fluid.set_obj(init_env)
-    fluid_compute(EPSILON, MAX_ITER, fluid, VELOCITY_X, VELOCITY_Y, VELOCITY_Z)
+    fluid_compute(EPSILON, MAX_ITER, fluid, -1, VELOCITY_X, VELOCITY_Y, VELOCITY_Z, dict(), ignore_epsilon=True)
 
-    main_model = [Model(WIDTH * HEIGHT * DEPTH, C_Vn=4), fluid]
+    main_model = [Model(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), fluid]
     main_model[0].set_weights(Model_Weights.load(f))
     
-    contours = []
-    for j in range(WIDTH):
-        contours.append(main_model[0].compute(main_model[1].data["Vx"],
-                                            main_model[1].data["Vy"],
-                                            main_model[1].data["Vz"],
-                                            P_X, P_Y, P_Z,
-                                            WIDTH, DEPTH, HEIGHT, j, N))
-    c, v = [], []
-    for c_v in contours:
-        cr = c_v[0, : int(c_v.shape[1] // 3)]
-        ci = c_v[0, int(c_v.shape[1] // 3) : int(c_v.shape[1] * 2 // 3)]
-        c.append([cr[i] + ci[i] * 1j for i in range(int(c_v.shape[1] // 3))])
-        v.append(c_v[0, int(c_v.shape[1] * 2 // 3) :])
-    
-    print('C, V:', c, v, sep='\n\n')
+    c_part = main_model[0].compute(*_Funcs.norm_velocities(
+                                    np.array(main_model[1].data["Vx"]),
+                                    np.array(main_model[1].data["Vy"]),
+                                    np.array(main_model[1].data["Vz"])),
+                                    P_X, P_Y, P_Z,
+                                    WIDTH, DEPTH, HEIGHT, N)
+    c = []
+    for j in range(DEPTH):
+        c_cur = c_part[ : ,  : Cn * 4 + 2]
+        cr = c_cur[0, : int(c_cur.shape[1] // 2)]
+        ci = c_cur[0, int(c_cur.shape[1] // 2): ]
+        
+        c.append([cr[x] + ci[x] * 1j for x in range(int(c_cur.shape[1] // 2))])
 
-    draw_contour(init_env, c, v, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
+        c_part = c_part[ : , Cn * 4 + 2 : ]
+
+    draw_contour(main_model[1].data["obj"], c, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
 
     clear_env(N, 1, [main_model], init_env)
 
@@ -91,10 +94,12 @@ if __name__ == "__main__":
             v = fluid.data["Vy"]
             w = fluid.data["Vz"]
 
-            for i in range(N):
-                for j in range(N):
-                    for k in range(N):
-                        if not fluid.data["obj"][_Funcs.IND(i, j, k, N)]:
+            for i in range(1, N - 1):
+                for j in range(1, N - 1):
+                    for k in range(1, N - 1):
+                        if not fluid.data["obj"][_Funcs.IND(i, j, k, N)] and fluid.data["obj"][_Funcs.IND(i - 1, j, k, N)] + fluid.data["obj"][_Funcs.IND(i + 1, j, k, N)]\
+                            + fluid.data["obj"][_Funcs.IND(i, j - 1, k, N)] + fluid.data["obj"][_Funcs.IND(i, j + 1, k, N)]\
+                            + fluid.data["obj"][_Funcs.IND(i, j, k - 1, N)] + fluid.data["obj"][_Funcs.IND(i, j, k + 1, N)] != 0:
                             arrow = Arrow3D(i, j, k, u[_Funcs.IND(i, j, k, N)], v[_Funcs.IND(i, j, k, N)], w[_Funcs.IND(i, j, k, N)], mutation_scale=20, lw=1, arrowstyle="-|>", color="k")
                             ax.add_artist(arrow)
 
