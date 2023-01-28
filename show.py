@@ -1,7 +1,9 @@
 import sys
+import argparse
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
-from network import _Funcs, Model, Model_Weights
+from network import _Funcs, AeroNetwork
 from object_draw import obj_meshgrid, draw_contour
 from fluid import Fluid, Arrow3D, add_velocities, fluid_compute, clear_env
 
@@ -14,9 +16,9 @@ D_T = 0.1
 VELOCITY_X = 2
 VELOCITY_Y = 0
 VELOCITY_Z = 0
-Cn = 2
+Cn = 4
 
-EPSILON = 0.01
+EPSILON = 0.03
 MAX_ITER = 40
 
 P_X = 3
@@ -29,16 +31,12 @@ HEIGHT = 5
 # Main settings-------------------------
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--env_path', default='./env/env_empty.npy', type=str, help='config path')
+    parser.add_argument('--weight_path', default='none', type=str, help='config path')
+    args = parser.parse_args()
 
-    if len(sys.argv) < 2:
-        raise ValueError("Weights file should be provided")
-    elif len(sys.argv) < 3:
-        raise ValueError("Enviroment file should be provided")
-    else:
-        f = sys.argv[1]
-        env_f = sys.argv[2]
-
-    init_env = list(np.load(env_f))
+    init_env = list(np.load(args.env_path))
 
     N = int(pow(len(init_env), 0.33)) + 1
     
@@ -46,25 +44,25 @@ if __name__ == "__main__":
     fluid.set_obj(init_env)
     fluid_compute(EPSILON, MAX_ITER, fluid, -1, VELOCITY_X, VELOCITY_Y, VELOCITY_Z, dict(), ignore_epsilon=True)
 
-    main_model = [Model(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), fluid]
-    main_model[0].set_weights(Model_Weights.load(f))
+    main_model = [AeroNetwork(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), fluid]
+    main_model[0].load_state_dict(torch.load(args.weight_path))
     
-    c_part = main_model[0].compute(*_Funcs.norm_velocities(
-                                    np.array(main_model[1].data["Vx"]),
-                                    np.array(main_model[1].data["Vy"]),
-                                    np.array(main_model[1].data["Vz"])),
+    c_part_inp = torch.reshape(AeroNetwork.prepare(
+                                    main_model[1].data["Vx"],
+                                    main_model[1].data["Vy"],
+                                    main_model[1].data["Vz"],
                                     P_X, P_Y, P_Z,
-                                    WIDTH, DEPTH, HEIGHT, N)
+                                    WIDTH, DEPTH, HEIGHT, N), (1, WIDTH * HEIGHT * DEPTH * 3))
+    c_part = main_model[0](c_part_inp)
     c = []
     for j in range(DEPTH):
         c_cur = c_part[ : ,  : Cn * 4 + 2]
         cr = c_cur[0, : int(c_cur.shape[1] // 2)]
         ci = c_cur[0, int(c_cur.shape[1] // 2): ]
         
-        c.append([cr[x] + ci[x] * 1j for x in range(int(c_cur.shape[1] // 2))])
+        c.append([cr[x].item() + ci[x].item() * 1j for x in range(int(c_cur.shape[1] // 2))])
 
         c_part = c_part[ : , Cn * 4 + 2 : ]
-
     draw_contour(main_model[1].data["obj"], c, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
 
     clear_env(N, 1, [main_model], init_env)
@@ -87,7 +85,8 @@ if __name__ == "__main__":
         fluid.step()
         
         force = fluid.forces_Newton()
-        print('Forces -', force)
+        sys.stdout.write("\rForces - {0:.8f} {1:.8f} {2:.8f}".format(*force))
+        sys.stdout.flush()
 
         if DRAW_ARROWS:
             u = fluid.data["Vx"]
