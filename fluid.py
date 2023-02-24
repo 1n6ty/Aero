@@ -130,7 +130,7 @@ class Fluid:
                 res[0].append(i)
                 break
         for i in range(x, self.N):
-            if self.data["obj"][self.__IND(i, y, z)] or i == self.N - 1:
+            if self.data["obj"][self.__IND(i, y, z)] or i == self.N - 2:
                 res[0].append(i)
                 break
         
@@ -139,7 +139,7 @@ class Fluid:
                 res[1].append(j)
                 break
         for j in range(y, self.N):
-            if self.data["obj"][self.__IND(x, j, z)] or j == self.N - 1:
+            if self.data["obj"][self.__IND(x, j, z)] or j == self.N - 2:
                 res[1].append(j)
                 break
         
@@ -148,7 +148,7 @@ class Fluid:
                 res[2].append(k)
                 break
         for k in range(z, self.N):
-            if self.data["obj"][self.__IND(x, y, k)] or k == self.N - 1:
+            if self.data["obj"][self.__IND(x, y, k)] or k == self.N - 2:
                 res[2].append(k)
                 break
         
