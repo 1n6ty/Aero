@@ -217,7 +217,7 @@ class Fluid:
                     if self.data["obj"][self.__IND(i, j, k)]:
                         if not self.data["obj"][self.__IND(i - 1, j, k)]:
                             f_x += (self.data["Vx"][self.__IND(i - 1, j, k)] if self.data["Vx"][self.__IND(i - 1, j, k)] > 0 else 0) * m / self.dt
-                        if not self.data["obj"][self.__IND(i - 1, j, k)]:
+                        if not self.data["obj"][self.__IND(i + 1, j, k)]:
                             f_x += (self.data["Vx"][self.__IND(i + 1, j, k)] if self.data["Vx"][self.__IND(i + 1, j, k)] < 0 else 0) * m / self.dt
 
                         if not self.data["obj"][self.__IND(i, j - 1, k)]:
