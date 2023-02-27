@@ -13,7 +13,7 @@ DRAW_ARROWS = False
 DRAW_OBJ = True
 
 D_T = 0.1
-VELOCITY_X = 2
+VELOCITY_X = 100
 VELOCITY_Y = 0
 VELOCITY_Z = 0
 Cn = 4
@@ -22,11 +22,11 @@ EPSILON = 0.03
 MAX_ITER = 40
 
 P_X = 3
-P_Y = 3
-P_Z = 3
+P_Y = 4
+P_Z = 4
 WIDTH = 5
 DEPTH = 5
-HEIGHT = 5
+HEIGHT = 6
 
 # Main settings-------------------------
 
@@ -44,28 +44,30 @@ if __name__ == "__main__":
     fluid.set_obj(init_env)
     fluid_compute(EPSILON, MAX_ITER, fluid, -1, VELOCITY_X, VELOCITY_Y, VELOCITY_Z, dict(), ignore_epsilon=True)
 
-    main_model = [AeroNetwork(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), fluid]
-    main_model[0].load_state_dict(torch.load(args.weight_path))
-    
-    c_part_inp = torch.reshape(AeroNetwork.prepare(
-                                    main_model[1].data["Vx"],
-                                    main_model[1].data["Vy"],
-                                    main_model[1].data["Vz"],
-                                    P_X, P_Y, P_Z,
-                                    WIDTH, DEPTH, HEIGHT, N), (1, WIDTH * HEIGHT * DEPTH * 3))
-    c_part = main_model[0](c_part_inp)
-    c = []
-    for j in range(DEPTH):
-        c_cur = c_part[ : ,  : Cn * 4 + 2]
-        cr = c_cur[0, : int(c_cur.shape[1] // 2)]
-        ci = c_cur[0, int(c_cur.shape[1] // 2): ]
+    if args.weight_path != 'none':
+
+        main_model = [AeroNetwork(WIDTH * HEIGHT * DEPTH, Cn=Cn, d = DEPTH), fluid]
+        main_model[0].load_state_dict(torch.load(args.weight_path))
         
-        c.append([cr[x].item() + ci[x].item() * 1j for x in range(int(c_cur.shape[1] // 2))])
+        c_part_inp = torch.reshape(AeroNetwork.prepare(
+                                        main_model[1].data["Vx"],
+                                        main_model[1].data["Vy"],
+                                        main_model[1].data["Vz"],
+                                        P_X, P_Y, P_Z,
+                                        WIDTH, DEPTH, HEIGHT, N), (1, WIDTH * HEIGHT * DEPTH * 3))
+        c_part = main_model[0](c_part_inp)
+        c = []
+        for j in range(DEPTH):
+            c_cur = c_part[ : ,  : Cn * 4 + 2]
+            cr = c_cur[0, : int(c_cur.shape[1] // 2)]
+            ci = c_cur[0, int(c_cur.shape[1] // 2): ]
+            
+            c.append([cr[x].item() + ci[x].item() * 1j for x in range(int(c_cur.shape[1] // 2))])
 
-        c_part = c_part[ : , Cn * 4 + 2 : ]
-    draw_contour(main_model[1].data["obj"], c, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
+            c_part = c_part[ : , Cn * 4 + 2 : ]
+        draw_contour(main_model[1].data["obj"], c, P_X, P_Y, P_Z, WIDTH, DEPTH, HEIGHT, N, 0.1)
 
-    clear_env(N, 1, [main_model], init_env)
+        clear_env(N, 1, [main_model], init_env)
 
     fig = plt.figure(1)
     ax = fig.add_subplot(111, projection='3d')
