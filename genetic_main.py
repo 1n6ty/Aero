@@ -12,24 +12,24 @@ from object_draw import compute_new_objects
 
 # Main settings-------------------------
 
-N = 10
+N = 12
 EPSILON = 0.03
 MAX_ITER = 40
 EPOCHS = 1000000000000
 C_N = 4
 D_T = 0.1
-VELOCITY_X = 2
+VELOCITY_X = 100
 VELOCITY_Y = 0
 VELOCITY_Z = 0
 
 # initial parallelipiped
 
 P_X = 3
-P_Y = 3
-P_Z = 3
+P_Y = 4
+P_Z = 4
 WIDTH = 5
 DEPTH = 5
-HEIGHT = 5
+HEIGHT = 6
 
 # Genetic algorithm settings------------
 

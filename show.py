@@ -23,7 +23,7 @@ MAX_ITER = 40
 
 P_X = 3
 P_Y = 4
-P_Z = 4
+P_Z = 3
 WIDTH = 5
 DEPTH = 5
 HEIGHT = 6

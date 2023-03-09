@@ -10,24 +10,24 @@ from network import AeroNetwork
 
 # Main settings-------------------------
 
-N = 10
+N = 12
 EPOCHS = 1000
 EPSILON = 0.01
 MAX_ITER = 40
 D_T = 0.1
 C_N = 4
-VELOCITY_X = 2
+VELOCITY_X = 100
 VELOCITY_Y = 0
 VELOCITY_Z = 0
 
 # initial parallelipiped
 
 P_X = 3
-P_Y = 3
-P_Z = 3
+P_Y = 4
+P_Z = 4
 WIDTH = 5
 DEPTH = 5
-HEIGHT = 5
+HEIGHT = 6
 
 # Main settings-------------------------
 
@@ -44,11 +44,11 @@ if __name__ == "__main__":
     init_fluid = Fluid(N, 1, 0.0017, D_T, 4)
     init_fluid.set_obj(init_env)
 
-    init_object = torch.tensor([[0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,]]) # array with shape (1, DEPTH * (C_N * 4 + 2)); each subarray with (C_N * 4 + 2) items looks like [c_real ... (C_N * 2 + 1 times), c_imaginary ... (C_N * 2 + 1 times)]
+    init_object = torch.tensor([[0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0,
+                                0, 0, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0, 0, 0, 0.5, 0, 0, 0, 0,]]) # array with shape (1, DEPTH * (C_N * 4 + 2)); each subarray with (C_N * 4 + 2) items looks like [c_real ... (C_N * 2 + 1 times), c_imaginary ... (C_N * 2 + 1 times)]
 
     # init main model
     main_model = AeroNetwork(arr_shape=WIDTH * HEIGHT * DEPTH, Cn=C_N, d=DEPTH)
